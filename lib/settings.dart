@@ -115,11 +115,13 @@ class _SettingsPageState extends State<SettingsPage> {
               title: Text(localizations.darkMode),
               value: _isDarkMode,
               onChanged: _onToggleDarkMode,
+              activeColor: Colors.amber[800],
             ),
             SwitchListTile(
               title: Text(localizations.unit),
               value: _isMetric,
               onChanged: _onToggleUnit,
+              activeColor: Colors.amber[800],
             ),
             SizedBox(height: 20.0),
             Text(
@@ -136,6 +138,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   value: locale.languageCode,
                   groupValue: _selectedLanguage,
                   onChanged: _onLanguageChanged,
+                  activeColor: Colors.amber[800],
                 );
               }).toList(),
             ),
@@ -195,52 +198,62 @@ class _SettingsPageState extends State<SettingsPage> {
                   value: 'WGS84',
                   groupValue: _selectedSpheroid,
                   onChanged: _onSpheroidChanged,
+                  activeColor: Colors.amber[800],
                 ),
                 RadioListTile<String>(
                   title: Text('GRS80'),
                   value: 'GRS80',
                   groupValue: _selectedSpheroid,
                   onChanged: _onSpheroidChanged,
+                  activeColor: Colors.amber[800],
                 ),
                 RadioListTile<String>(
                   title: Text('Bessel 1841'),
                   value: 'Bessel 1841',
                   groupValue: _selectedSpheroid,
                   onChanged: _onSpheroidChanged,
+                  activeColor: Colors.amber[800],
                 ),
                 RadioListTile<String>(
                   title: Text('Krassowski 1940'),
                   value: 'Krassowski 1940',
                   groupValue: _selectedSpheroid,
                   onChanged: _onSpheroidChanged,
+                  activeColor: Colors.amber[800],
                 ),
                 RadioListTile<String>(
                   title: Text('International 1924'),
                   value: 'International 1924',
                   groupValue: _selectedSpheroid,
                   onChanged: _onSpheroidChanged,
+                  activeColor: Colors.amber[800],
                 ),
                 RadioListTile<String>(
                   title: Text('Clarke 1866'),
                   value: 'Clarke 1866',
                   groupValue: _selectedSpheroid,
                   onChanged: _onSpheroidChanged,
+                  activeColor: Colors.amber[800],
                 ),
                 RadioListTile<String>(
                   title: Text('Everest 1830'),
                   value: 'Everest 1830',
                   groupValue: _selectedSpheroid,
                   onChanged: _onSpheroidChanged,
+                  activeColor: Colors.amber[800],
                 ),
                 SizedBox(height: 30.0),
                 ListTile(
                   title: Center(
                     child: TextButton(
-                      onPressed: _resetSettings,
-                      child: Text(localizations.resettodefault),
+                    onPressed: _resetSettings,
+                    child: Text(
+                      localizations.resettodefault,
+                      style: TextStyle(color: Colors.amber[800]),
                     ),
                   ),
                 ),
+                )
               ],
             ),
           ],

@@ -1,7 +1,8 @@
+// app core; displays a map with a search bar and a floating action button to toggle search mode; distance calculation with spheroids
+
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:latlong2/latlong.dart' show Ellipsoid;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -12,8 +13,7 @@ import 'settings.dart';
 import 'app_localizations.dart';
 import 'Secrets.dart' as s;
 
-// TODO: Andere Map Styles einfügen
-
+// Distance calculation; using spheroids
 class Distance {
   final Ellipsoid ellipsoid;
 
@@ -38,6 +38,7 @@ class Distance {
   }
 }
 
+// Spheroids for distance calculation
 class Ellipsoid {
   final double a; // semi-major axis
   final double b; // semi-minor axis
@@ -62,6 +63,7 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
 
+  // Dispose the focus node and cancel the debounce timer
   @override
   void dispose() {
     _focusNode.dispose();
@@ -69,6 +71,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
+  // Variables for the map
   double _zoomLevel = 5.9;
   bool _showSlider = false;
   bool _isSearchMode = false;
@@ -93,6 +96,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   String _mapStyle = 'Standard';
 
 
+  // Function for adjusting the zoom level with the slider
   void _onSliderChanged(double value) {
     setState(() {
       _zoomLevel = value;
@@ -100,12 +104,14 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     });
   }
 
+  // Function for toggling the search mode
   void _toggleSearchMode() {
     setState(() {
       _isSearchMode = !_isSearchMode;
     });
   }
 
+  // Function for clearing the inputs
   void _clearInputs() {
     _startController.clear();
     _endController.clear();
@@ -118,6 +124,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     });
   }
 
+  // Function for loading the settings
   void _loadSettings() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -127,6 +134,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     });
   }
 
+  // Returning the map URL for the selected map style; API-Key is in secrets.dart
   String _getMapUrlTemplate() {
     switch (_mapStyle) {
       case 'OpenCycle':
@@ -157,6 +165,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     }
   }
 
+  // Converting metric to imperial units
   String _formatDistance(double distanceInMeters) {
     if (_isMetric) {
       return distanceInMeters.toStringAsFixed(2);
@@ -166,6 +175,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     }
   }
 
+  // Returning the selected spheroid
   Ellipsoid _getEllipsoid() {
     switch (_selectedSpheroid) {
       case 'GRS80':
@@ -187,6 +197,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   }
 
   @override
+  // Initialize animation controller (for search bar), get current location and load settings
   void initState() {
     super.initState();
     _getCurrentLocation();
@@ -199,10 +210,12 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     _loadSettings();
   }
 
+  // Getting the current location
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
 
+    // Check if location services are enabled
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -211,6 +224,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       return;
     }
 
+    // Check location permissions
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -222,6 +236,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       }
     }
 
+    // Check if location permissions are permanently denied
     if (permission == LocationPermission.deniedForever) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Location permissions are permanently denied.')),
@@ -229,8 +244,10 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       return;
     }
 
+    // Get the current position; calling geolocator plugin function
     Position position = await Geolocator.getCurrentPosition();
     if (!mounted) return;
+    // go to
     setState(() {
       _zoomLevel = 15.0;
       _currentPosition = LatLng(position.latitude, position.longitude);
@@ -238,6 +255,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     });
   }
 
+  // Accessing user location and save it
   void _searchLocation(String query, {bool isStart = false}) async {
     try {
       if (query.isEmpty) {
@@ -267,6 +285,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     }
   }
 
+  // Get the route between the current and searched position using osrm (open source routing machine)
   Future<void> _getRoute() async {
     if (_currentPosition != null && _searchedPosition != null) {
       final osrm = Osrm();
@@ -316,6 +335,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   }
    */
 
+  // Calculate the total distance of the route
   double _calculateTotalDistance(List<LatLng> points) {
     double totalDistance = 0.0;
     for (int i = 0; i < points.length - 1; i++) {
@@ -324,10 +344,12 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     return totalDistance;
   }
 
+  // Calculate the direct distance (Luftdistanz) between two points
   double _calculateDirectDistance(LatLng start, LatLng end) {
     return Distance(ellipsoid: _getEllipsoid()).as(LengthUnit.Meter, start, end);
   }
 
+  // Adding delay for search
   Timer? _debounce;
   void onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
@@ -340,6 +362,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     });
   }
 
+  // Fetching suggestions for the search bar (for future update)
   Future<List<String>> _getSuggestions(String query) async {
     if (query.length < 2) {
       return [];
@@ -374,14 +397,17 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    // fetching the screen width and height, checking if dark mode is enabled and loading the translations
     final double screenWidth = MediaQuery.of(context).size.width;
     final double screenHeight = MediaQuery.of(context).size.height;
     final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final localizations = AppLocalizations.of(context);
 
+    // Map-UI; displaying the map with the search bar, the floating action buttons, and the slider
     return Scaffold(
       body: Stack(
         children: [
+          // Initialize the Map with the map controller and the map options
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
@@ -390,9 +416,10 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
             ),
             children: [
               TileLayer(
-                urlTemplate: _getMapUrlTemplate(), //"https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                urlTemplate: _getMapUrlTemplate(), //"https://tile.openstreetmap.org/{z}/{x}/{y}.png", // Standard OpenStreetMap Layer
               ),
               if (_currentPosition != null)
+                // Display the current position on the map via marker
                 MarkerLayer(
                   markers: [
                     Marker(
@@ -409,6 +436,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                     ),
                   ],
                 ),
+              // Display the searched position on the map via marker
               if (_searchedPosition != null)
                 MarkerLayer(
                   markers: [
@@ -426,6 +454,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                     ),
                   ],
                 ),
+              // Display the route between the current and searched position on the map via polyline
               if (_routePoints.isNotEmpty)
                 PolylineLayer(
                   polylines: [
@@ -441,11 +470,13 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               ),
             ],
           ),
+          // searchMode deactivated: display the single search bar
           if (!_isSearchMode)
             Positioned(
               top: screenHeight / 17,
               left: 10.0,
               right: 10.0,
+              // resize the search bar with animation
               child: AnimatedBuilder(
                 animation: _animationController,
                 builder: (context, child) {
@@ -466,6 +497,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                               _animationController.reverse();
                             }
                           }),
+                        // Search bar
                         decoration: InputDecoration(
                           hintText: localizations.search,
                           border: InputBorder.none,
@@ -482,6 +514,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                 },
               ),
             ),
+          // searchMode activated: display the two search bars for start and end point
           if (_isSearchMode)
             Positioned(
               top: 40.0,
@@ -497,6 +530,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                     child: Row(
                       children: [
                         Expanded(
+                          // Search bar for the start point
                           child: TextField(
                             controller: _startController,
                             decoration: InputDecoration(
@@ -511,6 +545,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                             },
                           ),
                         ),
+                        // Button to use the current location
                         IconButton(
                           icon: Icon(Icons.my_location),
                           tooltip: localizations.curpos,
@@ -524,6 +559,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                     ),
                   ),
                   SizedBox(height: 20.0),
+                  // Search bar for the end point
                   Container(
                     width: screenWidth / 3,
                     decoration: BoxDecoration(
@@ -545,6 +581,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                     ),
                   ),
                   SizedBox(height: 20.0),
+                  // Button to clear the inputs
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
@@ -570,6 +607,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                 ),
               ),
             ),
+            // Display the total and direct distance in a container
             Positioned(
               bottom: 20.0,
               left: 10.0,
@@ -582,6 +620,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                 ),
                 child: Column(
                   children: [
+                    // Display the total and direct distance
                     Text(
                       _totalDistance < 1000
                           ? '${localizations.linedistance}: ${_isMetric ? _totalDistance.toStringAsFixed(2) : _formatDistance(_totalDistance)} ${_isMetric ? localizations.m : localizations.mi}'
@@ -600,6 +639,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                 ),
               ),
             ),
+          // Floating Action Button: Enable / Disable Search Mode
           Positioned(
             bottom: screenHeight / 37.5, // Center the FAB vertically in the lower third
             left: (screenWidth / 2 + 135), // Center the FAB horizontally
@@ -610,6 +650,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               child: Icon(_isSearchMode ? Icons.close : Icons.search, color: Colors.amber[800]),
             ),
           ),
+          // Floating Action Button: Get Current Location / Update Position
           Positioned(
             bottom: screenHeight / 37.5, // Center the FAB vertically in the lower third
             left: (screenWidth / 2 - 190), // Center the FAB horizontally

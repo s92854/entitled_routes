@@ -1,11 +1,15 @@
+// Info page with information about the app
+
 import 'package:flutter/material.dart';
 import 'app_localizations.dart';
 
 class InfoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    // Load the AppLocalizations (translations)
     final localizations = AppLocalizations.of(context);
 
+    // Info-UI; List of information; loading some information from the AppLocalizations
     return Scaffold(
       appBar: AppBar(
         title: Center(child: Text(localizations.about)),

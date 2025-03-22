@@ -7,6 +7,7 @@ import 'l10n.dart';
 import 'settings.dart';
 import 'welcome.dart';
 
+// entry point - main function; loading shared preferences; ensure initialized
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -30,6 +31,7 @@ class MyApp extends StatefulWidget {
   }
 }
 
+// load & initialize the app; set the theme mode; set the locale
 class _MyAppState extends State<MyApp> {
   late bool _isDarkMode;
   late Locale _locale;
@@ -62,6 +64,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // Load the AppLocalizations (translations); set the locale
       locale: _locale,
       supportedLocales: L10n.all,
       localizationsDelegates: [
@@ -70,6 +73,7 @@ class _MyAppState extends State<MyApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      // Light Theme settings
       theme: ThemeData(
         brightness: Brightness.light,
         colorScheme: ColorScheme.fromSeed(
@@ -78,6 +82,7 @@ class _MyAppState extends State<MyApp> {
         ),
         useMaterial3: true,
       ),
+      // Dark Theme settings
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         colorScheme: ColorScheme.fromSeed(
@@ -87,10 +92,12 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
       ),
       themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      // Default page; check for darkMode
       home: Welcome(
         toggleDarkMode: _toggleDarkMode,
         isDarkMode: _isDarkMode,
       ),
+      // Settings page route
       routes: {
         '/settings': (context) => SettingsPage(
           toggleDarkMode: _toggleDarkMode,

@@ -1,3 +1,5 @@
+// Welcome page with the bottom navigation bar; loading the pages InfoPage, MapPage, and SettingsPage when clicking on the specified icon
+
 import 'package:flutter/material.dart';
 import 'map.dart';
 import 'info.dart';
@@ -15,10 +17,12 @@ class Welcome extends StatefulWidget {
 }
 
 class _WelcomeState extends State<Welcome> {
-  int _selectedIndex = 1;
+  // Index of the selected page (which page is displayed when opening the app)
+  int _selectedIndex = 1; // 1 = MapPage
 
   late List<Widget> _widgetOptions;
 
+  // Initialize the pages and darkMode
   @override
   void initState() {
     super.initState();
@@ -32,6 +36,7 @@ class _WelcomeState extends State<Welcome> {
     ];
   }
 
+  // Function for changing the page
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -40,8 +45,10 @@ class _WelcomeState extends State<Welcome> {
 
   @override
   Widget build(BuildContext context) {
+    // Load the AppLocalizations (translations)
     final localizations = AppLocalizations.of(context);
 
+    // Welcome-UI; Bottom Navigation Bar with the pages InfoPage, MapPage, and SettingsPage
     return Scaffold(
       body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
